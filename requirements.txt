@@ -1,0 +1,2 @@
+#Dependencias necesarias para el proyecto
+fastapi[standard]>=0.137.1
