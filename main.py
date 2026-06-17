@@ -1,29 +1,18 @@
-from fastapi import FastAPI
-from  modelos.clientes import Cliente, Clientecrear
+from fastapi import FastAPI, HTTPException, status
+from app.modelos.clientes import Cliente, Clientecrear, ClienteEditar
+from app.modelos.facturas import Factura, FacturaCrear, FacturaEditar
+from app.modelos.transacciones import Transaccion,TransaccionCrear, TransaccionEditar
+from app.enrutadores import clientes, facturas, transacciones
+from app.enrutadores.clientes import rutas_clientes, ListaClientes
+from app.enrutadores.facturas import rutas_facturas, ListaFacturas
 
-app=FastAPI()
+app = FastAPI()
 
+ListaClientes: list[Cliente] = []
+ListaFacturas: list[Factura] = []
+ListaTransacciones: list[Transaccion] = []
 
-lista_clientes:list[Cliente] = []
-
-
-#endpoint para listar todos los clientes
-@app.get("/clientes", response_model=list[Cliente])
-def listar_clientes():
-    return lista_clientes
-
-#endpoint para listar un solo cliente de la lista
-@app.get("/clientes/{cliente_id}", response_model=Cliente)
-def listar_clientes(cliente_id: int):
-    #recorrer la lista clientes
-    for i, obj_cliente in enumerate(lista_clientes):
-        if obj_cliente.get("id") == cliente_id:
-            return obj_cliente
-        
-
-#endpoint para crear un cliente y agregar a la lista 
-@app.post("/clientes", response_model=Cliente)
-def crear_clientes(datos_cliente:Clientecrear):
-    cliente_val = Cliente.model_validate(datos_cliente.model_dump())
-    lista_clientes.append(cliente_val)
-    return cliente_val
+#incluir rutas de clientes
+app.include_router(clientes.rutas_clientes, tags=["Clientes"])
+app.include_router(facturas.rutas_facturas, tags=["Facturas"])
+app.include_router(transacciones.rutas_transacciones, tags=["Transacciones"])
