@@ -21,7 +21,9 @@ async def ListarCliente(cliente_id: int):
         if cliente[1].id == cliente_id:
             return cliente[1]
 
-    raise HTTPException(status_code=404, detail=f"Cliente con id {cliente_id} no encontrado")
+    raise HTTPException(
+        status_code=404, detail=f"Cliente con id {cliente_id} no encontrado"
+    )
 
 #endpoint, para crear un cliente, y agregar a la lista
 

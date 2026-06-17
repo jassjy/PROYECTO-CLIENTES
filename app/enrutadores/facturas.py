@@ -18,10 +18,13 @@ async def ListarFacturas():
 async def ListarFactura(factura_id: int):
     #recorrer la lista facturas
     for  factura in enumerate(ListaFacturas):
-        if factura[1].id == factura_id:
-            return factura[1]
+        if factura.id == factura_id:
+            return factura
 
-    raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Factura con id {factura_id} no encontrada")
+    raise HTTPException(
+        status_code=status.HTTP_400_BAD_REQUEST, 
+        detail=f"la factura con id {factura_id}, no existe."
+    )
 
 
 @rutas_facturas.post("/facturas", response_model=Factura)
