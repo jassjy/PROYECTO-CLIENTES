@@ -3,14 +3,13 @@ from app.modelos.clientes import Cliente, Clientecrear, ClienteEditar
 from app.modelos.facturas import Factura, FacturaCrear, FacturaEditar
 from app.modelos.transacciones import Transaccion,TransaccionCrear, TransaccionEditar
 from app.enrutadores import clientes, facturas, transacciones
-from app.enrutadores.clientes import rutas_clientes, ListaClientes
-from app.enrutadores.facturas import rutas_facturas, ListaFacturas
+from app.enrutadores.clientes import rutas_clientes
+from app.enrutadores.facturas import rutas_facturas
+from app.enrutadores.transacciones import rutas_transacciones
+from app.listas import lista_clientes, lista_facturas, lista_transacciones
 
 app = FastAPI()
 
-ListaClientes: list[Cliente] = []
-ListaFacturas: list[Factura] = []
-ListaTransacciones: list[Transaccion] = []
 
 #incluir rutas de clientes
 app.include_router(clientes.rutas_clientes, tags=["Clientes"])

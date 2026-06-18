@@ -1,9 +1,9 @@
 from fastapi import APIRouter, HTTPException, status
 from app.modelos.facturas import Factura,FacturaCrear, FacturaEditar
 from app.modelos.clientes import Cliente, Clientecrear, ClienteEditar
-
-ListaFacturas: list[Factura] = []
-ListaClientes: list[Cliente] = []
+from ..listas import lista_clientes, lista_facturas
+#ListaFacturas: list[Factura] = []
+#ListaClientes: list[Cliente] = []
 
 rutas_facturas = APIRouter()
 
@@ -11,15 +11,15 @@ rutas_facturas = APIRouter()
 #crear los endpoints para facturas
 
 @rutas_facturas.get("/facturas", response_model=list[Factura])
-async def ListarFacturas():
-    return ListaFacturas
+async def lista_Facturas():
+    return lista_facturas
 
 @rutas_facturas.get("/facturas/{factura_id}", response_model=Factura)
-async def ListarFactura(factura_id: int):
+async def ListaFactura(factura_id: int):
     #recorrer la lista facturas
-    for  factura in enumerate(ListaFacturas):
-        if factura.id == factura_id:
-            return factura
+    for  factura in enumerate(lista_facturas):
+        if factura[1].id == factura_id:
+            return factura[1]
 
     raise HTTPException(
         status_code=status.HTTP_400_BAD_REQUEST, 
@@ -27,27 +27,32 @@ async def ListarFactura(factura_id: int):
     )
 
 
-@rutas_facturas.post("/facturas", response_model=Factura)
-async def CrearFactura(cliente_id: int, datos_factura: FacturaCrear):
+@rutas_facturas.post("/facturas/{cliente_id}", response_model=Factura)
+async def crear_factura(cliente_id: int, datos_factura: FacturaCrear):
     #buscar el cliente en la lista clientes
     cliente_encontrado = None
-    for cliente in ListaClientes:
+    for cliente in lista_clientes:
         if cliente.id == cliente_id:
            cliente_encontrado = cliente
     # MENSAJE si no existe el cliente
     if not cliente_encontrado:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Cliente con id {cliente_id} no existe")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, 
+            detail=f"Cliente con id {cliente_id} no existe"
+        )
     
-    #validar datos de la factura
+   #validar datos de la factura
     factura_validada = Factura.model_validate(datos_factura.model_dump())
     factura_validada.cliente = cliente_encontrado
     
-    
     #id de la factura
-    factura_validada.id = len(ListaFacturas) + 1
-    ListaFacturas.append(factura_validada)
+    factura_validada.id = len(lista_facturas) + 1
+    lista_facturas.append(factura_validada)
 
     return factura_validada
+
+
+  
 
 
 
