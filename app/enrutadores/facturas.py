@@ -63,7 +63,19 @@ async def EditarFactura(factura_id: int, datos_factura: Factura):
 
 @rutas_facturas.delete("/facturas/{factura_id}", response_model=Factura)
 async def EliminarFactura(factura_id: int):
-    pass
+    # 1. Buscar la factura por su ID y obtener su posición (índice) en la lista
+    for indice, factura in enumerate(lista_facturas):
+        if factura.id == factura_id:
+            # 2. Si la encuentra, la saca de la lista usando .pop()
+            factura_eliminada = lista_facturas.pop(indice)
+            # 3. Retorna la factura que se eliminó
+            return factura_eliminada
+
+    # 4. Si recorre toda la lista y no la encuentra, lanza un error 404
+    raise HTTPException(
+        status_code=status.HTTP_404_NOT_FOUND, 
+        detail=f"Factura con id {factura_id} no encontrada"
+        )
 
 
 
