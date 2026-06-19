@@ -5,7 +5,7 @@ from ..listas import lista_facturas, lista_transacciones
 
 rutas_transacciones = APIRouter()
 
-# --- ENDPOINTS PARA TRANSACCIONES ---
+
 
 # 1. Listar todas las transacciones
 @rutas_transacciones.get("/transacciones", response_model=list[Transaccion])
@@ -26,8 +26,7 @@ async def ListarTransaccion(transaccion_id: int):
     )
 
 
-# 3. Crear una transacción asociada a una factura (RUTA CORREGIDA)
-# Ahora la URL indica claramente que estás agregando una transacción DENTRO de una factura específica
+# 3. Crear una transacción asociada a una factura 
 @rutas_transacciones.post("/facturas/{factura_id}/transacciones", response_model=Transaccion)
 async def CrearTransaccion(factura_id: int, datos_transaccion: TransaccionCrear):
     factura_encontrada = None
