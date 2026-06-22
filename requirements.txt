@@ -1,2 +1,2 @@
-#Dependencias necesarias para el proyecto
-fastapi[standard]>=0.137.1
+fastapi[standad]>=0.136.3
+squlmode>=0.0.38
