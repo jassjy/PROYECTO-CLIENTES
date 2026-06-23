@@ -12,3 +12,11 @@ Forma de activacion
 1.\.mi_env\Scripts\Activate
 2.fastapi dev app/main.py
 
+NOTA IMPORTANTE
+instalar extension sqlite viewer
+
+CODIGOS PARA VER LA BASE DE DATOS EN CASO DE NO TENER SQLITE VIEWER
+
+1.sqlite3 bd_clientes.sqlite3
+2. .tabes
+3. selec * from cliente:
