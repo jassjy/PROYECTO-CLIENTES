@@ -13,22 +13,16 @@ class FacturaBase(SQLModel):
 
     @computed_field
     @property
-    def vr_total(self) -> float:
-        #calcular(cantidad * vr_unitario)
-        #consultar el id actual de la factura
-
-        #factura_id_actual = getattr(self, "id", None)
-        #total_factura = 0.0
-
-        #if not factura_id_actual or not self.transacciones:
-          #  return total_factura
+    def vr_total(self) -> float:        
+        total_factura = 0.0
+        if self.transacciones== None:
+            return total_factura
         #recorrer las transacciones, segun el id de la factura
 
-        #for transaccion in self.transacciones:
-          #  if transaccion.factura_id == factura_id_actual:
-             #  total_factura += transaccion.vr_unitario * transaccion.cantidad
+        for transaccion in self.transacciones:
+            total_factura += transaccion.vr_unitario * transaccion.cantidad
 
-        return 0.0
+        return total_factura
 
 class FacturaCrear(FacturaBase):
     cliente: Cliente
@@ -41,11 +35,15 @@ class FacturaEditar(FacturaBase):
 class Factura(FacturaBase, table=True):
     id: int | None = Field(default=None, primary_key=True)
     cliente_id: int = Field(default=None, foreign_key="cliente.id")
-    #crear relaciones virtuales - NO en la bd
+    #crear relaciones virtuales,transacciones - NO en la bd
+    transacciones: list[Transaccion] = Relationship(back_populates="factura")
     cliente: Cliente = Relationship(back_populates="facturas")
 
 #modelo para mostrar al usurario o el cliente
 class FacturaLeer(FacturaBase):
     id: int
     cliente: ClienteLeer
+
+class FacturaLeerCompuesta(FacturaLeer):
+    transacciones: list[Transaccion] = []
     
