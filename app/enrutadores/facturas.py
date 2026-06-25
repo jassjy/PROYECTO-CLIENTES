@@ -15,21 +15,21 @@ rutas_facturas = APIRouter()
 async def lista_Facturas(sesion: sesion_dependencia): 
     #select * from facturas
     consulta = select(Factura)
-    lista_faturas = sesion.exec(consulta).all()
+    lista_facturas = sesion.exec(consulta).all()
     return lista_facturas
 
 @rutas_facturas.get("/facturas/{factura_id}", response_model=Factura)
-async def ListaFactura(factura_id: int):
+async def ListaFactura(factura_id: int, sesion: sesion_dependencia):
+    factura_encontrada = sesion.get(Factura, factura_id)
     #recorrer la lista facturas
-    for  factura in enumerate(lista_facturas):
-        if factura[1].id == factura_id:
-            return factura[1]
-
-    raise HTTPException(
+    
+    if not factura_encontrada:
+         raise HTTPException(
         status_code=status.HTTP_400_BAD_REQUEST, 
         detail=f"la factura con id {factura_id}, no existe."
     )
 
+    return factura_encontrada
 
 @rutas_facturas.post("/facturas/{cliente_id}", response_model=Factura)
 async def crear_factura(cliente_id: int, datos_factura: FacturaCrear, sesion: sesion_dependencia):
@@ -62,24 +62,41 @@ async def crear_factura(cliente_id: int, datos_factura: FacturaCrear, sesion: se
 
 
 @rutas_facturas.patch("/facturas/{factura_id}", response_model=Factura)
-async def EditarFactura(factura_id: int, datos_factura: Factura):
-    pass
+async def EditarFactura(factura_id: int, datos_factura: FacturaEditar, sesion: sesion_dependencia):
+    factura_bd = sesion.get(Factura, factura_id)
+    if not factura_bd:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Factura con id{factura_id} no encontrada"
+        )
+    datos_enviados = datos_factura.model_dump(exclude_unset=True)
+    for llave, valor in datos_enviados.items():
+        if llave != "vr_total":
+            setattr(factura_bd, llave, valor)
+         
+    sesion.add(factura_bd)
+    sesion.commit()
+    sesion.refresh(factura_bd)
+    return factura_bd
+
 
 @rutas_facturas.delete("/facturas/{factura_id}", response_model=Factura)
-async def EliminarFactura(factura_id: int):
-    # 1. Buscar la factura por su ID y obtener su posición (índice) en la lista
-    for indice, factura in enumerate(lista_facturas):
-        if factura.id == factura_id:
-            # 2. Si la encuentra, la saca de la lista usando .pop()
-            factura_eliminada = lista_facturas.pop(indice)
-            # 3. Retorna la factura que se eliminó
-            return factura_eliminada
+async def EliminarFactura(factura_id: int, sesion: sesion_dependencia):
+    factura_borrar = sesion.get(Factura, factura_id)
 
-    # 4. Si recorre toda la lista y no la encuentra, lanza un error 404
-    raise HTTPException(
+    if not factura_borrar:
+         # 4. Si recorre toda la lista y no la encuentra, lanza un error 404
+     raise HTTPException(
         status_code=status.HTTP_404_NOT_FOUND, 
         detail=f"Factura con id {factura_id} no encontrada"
         )
+    sesion.delete(factura_borrar)
+    sesion.commit()
+
+    return factura_borrar
+
+
+   
 
 
 

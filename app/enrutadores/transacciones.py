@@ -2,6 +2,8 @@ from fastapi import APIRouter, HTTPException, status
 from app.modelos.transacciones import Transaccion, TransaccionCrear, TransaccionEditar
 from app.modelos.facturas import Factura, FacturaCrear, FacturaEditar
 from ..listas import lista_facturas, lista_transacciones
+from ..conexion_bd import sesion_dependencia
+from sqlmodel import select
 
 rutas_transacciones = APIRouter()
 
@@ -9,8 +11,11 @@ rutas_transacciones = APIRouter()
 
 # 1. Listar todas las transacciones
 @rutas_transacciones.get("/transacciones", response_model=list[Transaccion])
-async def ListarTransacciones():
-    return lista_transacciones
+async def ListarTransacciones(sesion: sesion_dependencia):
+    #consulta = select(Transaccion)
+    #sesion.exec(consulta).all()
+    #return lista_transacciones
+    return sesion.exec(select(Transaccion)).all()
 
 
 # 2. Obtener una sola transacción por ID
@@ -28,14 +33,11 @@ async def ListarTransaccion(transaccion_id: int):
 
 # 3. Crear una transacción asociada a una factura 
 @rutas_transacciones.post("/facturas/{factura_id}/transacciones", response_model=Transaccion)
-async def CrearTransaccion(factura_id: int, datos_transaccion: TransaccionCrear):
+async def CrearTransaccion(factura_id: int, datos_transaccion: TransaccionCrear, sesion: sesion_dependencia):
     factura_encontrada = None
     
     # Buscar la factura en la lista de facturas
-    for factura in lista_facturas:
-        if factura.id == factura_id:
-            factura_encontrada = factura
-            break 
+    factura_encontrada = sesion.get(Factura, factura_id)
            
     # Validar si no existe la factura
     if not factura_encontrada:
@@ -44,19 +46,14 @@ async def CrearTransaccion(factura_id: int, datos_transaccion: TransaccionCrear)
             detail=f"La Factura con id {factura_id} no existe (Asegúrate de que ya esté creada)"
         )
     
-    # Validar datos de la transacción
-    transaccion_validada = Transaccion.model_validate(datos_transaccion.model_dump())
-    transaccion_validada.factura_id = factura_id
-    
-    # Generar el id único de la transacción
-    transaccion_validada.id = len(lista_transacciones) + 1
-    
-    # Asociar al sub-listado interno de la factura
-    factura_encontrada.transacciones.append(transaccion_validada)
-    
-    # Agregar a la lista global de transacciones
-    lista_transacciones.append(transaccion_validada)
-    
+    # Validar datos de la transacción -json y pasamos a dict
+    transaccion_dict = datos_transaccion.model_dump()
+    transaccion_dict["factura_id"] = factura_id
+    transaccion_validada = Transaccion.model_validate(transaccion_dict)
+    #guardar en bd
+    sesion.add(transaccion_validada)
+    sesion.commit()
+    sesion.refresh(transaccion_validada)
     return transaccion_validada
 
 
