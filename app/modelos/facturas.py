@@ -30,7 +30,9 @@ class FacturaBase(SQLModel):
         return 0.0
 
 class FacturaCrear(FacturaBase):
-    pass
+    cliente: Cliente
+    transacciones: list[Transaccion] =[]
+
 
 class FacturaEditar(FacturaBase):
     pass
@@ -38,3 +40,4 @@ class FacturaEditar(FacturaBase):
 class Factura(FacturaBase, table=True):
     id: int | None = Field(default=None, primary_key=True)
     cliente_id: int = Field(default=None, foreign_key="cliente.id")
+    cliente: Cliente | None = Relationship(back_populates="facturas")

@@ -15,3 +15,4 @@ class ClienteEditar(ClienteBase):
 
 class Cliente(ClienteBase, table=True):
     id: int | None = Field(default=None, primary_key=True)
+    facturas: list["Factura"] = Relationship(back_populates="cliente")

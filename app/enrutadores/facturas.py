@@ -2,16 +2,20 @@ from fastapi import APIRouter, HTTPException, status
 from app.modelos.facturas import Factura,FacturaCrear, FacturaEditar
 from app.modelos.clientes import Cliente, Clientecrear, ClienteEditar
 from ..listas import lista_clientes, lista_facturas
+from ..conexion_bd import sesion_dependencia
+from sqlmodel import select
 #ListaFacturas: list[Factura] = []
 #ListaClientes: list[Cliente] = []
 
 rutas_facturas = APIRouter()
 
-#||||||||||||||||||||||||||||||||
-#crear los endpoints para facturas
+
 
 @rutas_facturas.get("/facturas", response_model=list[Factura])
-async def lista_Facturas():
+async def lista_Facturas(sesion: sesion_dependencia): 
+    #select * from facturas
+    consulta = select(Factura)
+    lista_faturas = sesion.exec(consulta).all()
     return lista_facturas
 
 @rutas_facturas.get("/facturas/{factura_id}", response_model=Factura)
@@ -28,12 +32,10 @@ async def ListaFactura(factura_id: int):
 
 
 @rutas_facturas.post("/facturas/{cliente_id}", response_model=Factura)
-async def crear_factura(cliente_id: int, datos_factura: FacturaCrear):
-    #buscar el cliente en la lista clientes
-    cliente_encontrado = None
-    for cliente in lista_clientes:
-        if cliente.id == cliente_id:
-           cliente_encontrado = cliente
+async def crear_factura(cliente_id: int, datos_factura: FacturaCrear, sesion: sesion_dependencia):
+    #buscar el cliente en bd
+    
+    cliente_encontrado = sesion.get(Cliente, cliente_id)
     # MENSAJE si no existe el cliente
     if not cliente_encontrado:
         raise HTTPException(
@@ -41,13 +43,15 @@ async def crear_factura(cliente_id: int, datos_factura: FacturaCrear):
             detail=f"Cliente con id {cliente_id} no existe"
         )
     
-   #validar datos de la factura
-    factura_validada = Factura.model_validate(datos_factura.model_dump())
+   #validar datos de la factura-json, pasar dict
+    factura_dict = datos_factura.model_dump()
+    factura_dict ["cliente_id"] = cliente_id
+    factura_validada = Factura.model_validate(factura_dict)
     factura_validada.cliente = cliente_encontrado
-    
-    #id de la factura
-    factura_validada.id = len(lista_facturas) + 1
-    lista_facturas.append(factura_validada)
+    #guardar en bd
+    sesion.add(factura_validada)
+    sesion.commit()
+    sesion.refresh(factura_validada)
 
     return factura_validada
 
